@@ -11,9 +11,9 @@ import { Observable } from "rxjs";
 export class ApiInterceptor implements HttpInterceptor {
   intercept(
     req: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<any>> {
-    const apiReq = req.clone({ url: `http://conduit-backend:8000/api${req.url}` });
+    const apiReq = req.clone({ url: `http://localhost:8000/api${req.url}` });
     return next.handle(apiReq);
   }
 }
