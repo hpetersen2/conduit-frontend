@@ -1,9 +1,6 @@
 # =========================================
 # Stage 1: Build the Angular Application
 # =========================================
-# =========================================
-# Stage 1: Build the Angular Application
-# =========================================
 ARG NODE_VERSION=24.7.0-alpine
 ARG NGINX_VERSION=alpine3.22
 
@@ -37,8 +34,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY --chown=nginx:nginx --from=builder /app/dist/angular-conduit/ /usr/share/nginx/html/
 
-# nginx-unprivileged hört auf 8080
-EXPOSE 4200
-
-# ❌ KEIN CMD, KEIN npm
-# nginx startet automatisch
+# nginx-unprivileged läuft standardmäßig auf Port 8080
+EXPOSE 8080
