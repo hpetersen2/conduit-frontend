@@ -1,21 +1,17 @@
-FROM node:18-alpine AS build
-
+# Stage 1: Angular build
+FROM node:24.7.0-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
-
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
 COPY . .
+# Angular build für Produktion
+RUN npm run build -- --configuration=production
 
 ARG BACKEND_API_URL
-ENV BACKEND_API_URL=${BACKEND_API_URL}
+RUN ng build --configuration=production --output-path=dist/angular-conduit --base-href=/ --aot --prod
 
-RUN node src/scripts/generate-env.js
-RUN npm run build --prod
-
-
-FROM nginx:stable-alpine
-
-COPY --from=build /app/dist/angular-conduit /usr/share/nginx/html
-
+# Stage 2: NGINX nur zum Serven der statischen Dateien
+FROM nginx:alpine AS runner
+# nginx.conf nicht nötig, Standard reicht
+COPY --from=builder /app/dist/angular-conduit/ /usr/share/nginx/html/
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
