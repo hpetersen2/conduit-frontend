@@ -1,31 +1,21 @@
-# =========================================
-# Stage 1: Build the Angular Application
-# =========================================
-ARG NODE_VERSION=24.7.0-alpine
-ARG NGINX_VERSION=alpine3.22
-
-FROM node:${NODE_VERSION} AS builder
+FROM node:18-alpine AS build
 
 WORKDIR /app
-
-COPY package.json package-lock.json ./
-
-RUN --mount=type=cache,target=/root/.npm npm ci
+COPY package*.json ./
+RUN npm install
 
 COPY . .
 
-RUN npm run build 
+ARG BACKEND_API_URL
+ENV BACKEND_API_URL=${BACKEND_API_URL}
 
-# =========================================
-# Stage 2: Prepare Nginx to Serve Static Files
-# =========================================
+RUN node src/scripts/generate-env.js
+RUN npm run build --prod
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS runner
 
-USER nginx
+FROM nginx:stable-alpine
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /app/dist/angular-conduit /usr/share/nginx/html
 
-COPY --chown=nginx:nginx --from=builder /app/dist/angular-conduit/ /usr/share/nginx/html/
-
-EXPOSE 8080
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
